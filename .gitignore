@@ -1,0 +1,22 @@
+# Java
+*.class
+*.jar
+*.war
+target/
+
+
+# Maven wrapper
+.mvn/
+
+
+# IntelliJ
+.idea/
+*.iml
+
+
+# Docker
+docker-compose.override.yml
+
+
+# OS
+.DS_Store
