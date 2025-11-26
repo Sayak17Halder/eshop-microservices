@@ -16,6 +16,10 @@ spring:
               args:
                 name: product-service
                 fallbackUri: forward:/fallback/product-service
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory-service/**
       discovery:
         locator:
           enabled: true
