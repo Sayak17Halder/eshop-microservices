@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: order-service
+
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: orderdb
+
+server:
+  port: 8083
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"

@@ -1,5 +1,6 @@
 package com.eshop.product_service.controller;
 
+import com.eshop.product_service.exception.ResourceNotFoundException;
 import com.eshop.product_service.model.Product;
 import com.eshop.product_service.repository.ProductRepository;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +27,12 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Product> get(@PathVariable String id) {
-        return repo.findById(id).map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+//        return repo.findById(id).map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        return ResponseEntity.ok(product);
     }
 
     @PostMapping
@@ -42,7 +47,7 @@ public class ProductController {
             existing.setName(p.getName());
             existing.setDescription(p.getDescription());
             existing.setPrice(p.getPrice());
-            existing.setStock(p.getStock());
+            existing.setSkuCode(p.getSkuCode());
             repo.save(existing);
             return ResponseEntity.ok(existing);
         }).orElse(ResponseEntity.notFound().build());
