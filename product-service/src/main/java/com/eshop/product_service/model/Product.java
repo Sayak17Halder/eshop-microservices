@@ -1,12 +1,12 @@
 package com.eshop.product_service.model;
 
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 
 @Document(collection = "products")
@@ -24,16 +24,15 @@ public class Product {
     @Positive(message = "Price must be positive")
     private BigDecimal price;
 
-    private int stock;
+    @NotBlank(message = "SKU Code cannot be empty")
+    private String skuCode;
 
-    // constructors, getters, setters
     public Product() {}
-    public Product(String name, String description, BigDecimal price, int stock) {
+
+    public Product(String name, String description, BigDecimal price, String skuCode) {
         this.name = name;
         this.description = description;
         this.price = price;
-        this.stock = stock;
+        this.skuCode = skuCode;
     }
-    // getters and setters ...
-    // (Generate in IntelliJ or paste manually)
 }

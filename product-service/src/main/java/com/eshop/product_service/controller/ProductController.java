@@ -47,7 +47,7 @@ public class ProductController {
             existing.setName(p.getName());
             existing.setDescription(p.getDescription());
             existing.setPrice(p.getPrice());
-            existing.setStock(p.getStock());
+            existing.setSkuCode(p.getSkuCode());
             repo.save(existing);
             return ResponseEntity.ok(existing);
         }).orElse(ResponseEntity.notFound().build());

@@ -14,4 +14,11 @@ public class FallbackController {
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body("Product Service is currently unavailable. Please try again later.");
     }
+
+    @GetMapping("/fallback/inventory-service")
+    public ResponseEntity<String> inventoryServiceFallback() {
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Inventory Service is currently unavailable. Please try again later.");
+    }
 }
