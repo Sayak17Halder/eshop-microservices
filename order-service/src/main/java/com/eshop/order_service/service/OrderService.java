@@ -2,11 +2,13 @@ package com.eshop.order_service.service;
 
 import com.eshop.order_service.dto.InventoryResponse;
 import com.eshop.order_service.dto.OrderRequest;
+import com.eshop.order_service.event.OrderCreatedEvent;
 import com.eshop.order_service.exception.ProductOutOfStockException;
 import com.eshop.order_service.model.*;
 import com.eshop.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -23,6 +25,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public String placeOrder(OrderRequest orderRequest) {
 
@@ -73,8 +76,26 @@ public class OrderService {
                 .build();
 
         orderRepository.save(order);
-
+        OrderCreatedEvent event = buildEventFromOrder(order);
+        kafkaTemplate.send("order-created", order.getOrderNumber(), event);
         return order.getOrderNumber();
+    }
+
+    private OrderCreatedEvent buildEventFromOrder(Order order) {
+        List<OrderCreatedEvent.OrderLineItemEvent> orderItemEvents = order.getOrderItems()
+                .stream()
+                .map(item -> new OrderCreatedEvent.OrderLineItemEvent(
+                        item.getSkuCode(),
+                        item.getQuantity(),
+                        item.getPrice()
+                ))
+                .toList();
+
+        return new OrderCreatedEvent(
+                order.getOrderNumber(),
+                order.getAmount(),
+                orderItemEvents
+        );
     }
 
     public List<Order> getAllOrders() {

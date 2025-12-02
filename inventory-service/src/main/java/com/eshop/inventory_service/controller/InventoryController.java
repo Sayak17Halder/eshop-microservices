@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -31,10 +33,21 @@ public class InventoryController {
     // New bulk endpoint (POST or GET) — we'll use POST for long lists
     @PostMapping("/availability")
     public List<InventoryResponse> checkAvailability(@RequestBody List<String> skuCodes) {
+
+//        return skuCodes.stream()
+//                .map(sku -> repo.findBySkuCode(sku)
+//                        .map(inv -> new InventoryResponse(sku, inv.getQuantity() > 0, inv.getQuantity()))
+//                        .orElse(new InventoryResponse(sku, false, 0)))
+//                .collect(Collectors.toList());
+
+        List<Inventory> inventories = repo.findBySkuCodeIn(skuCodes);
+        Map<String, Inventory> map = inventories.stream().collect(Collectors.toMap(Inventory::getSkuCode, Function.identity()));
         return skuCodes.stream()
-                .map(sku -> repo.findBySkuCode(sku)
-                        .map(inv -> new InventoryResponse(sku, inv.getQuantity() > 0, inv.getQuantity()))
-                        .orElse(new InventoryResponse(sku, false, 0)))
+                .map(sku -> {
+                    Inventory inv = map.get(sku);
+                    if (inv == null) return new InventoryResponse(sku, false, 0);
+                    return new InventoryResponse(sku, inv.getQuantity() > 0, inv.getQuantity());
+                })
                 .collect(Collectors.toList());
     }
 

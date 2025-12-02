@@ -18,6 +18,35 @@ spring:
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:29092
+      group-id: inventory-service-group
+      auto-offset-reset: earliest
+
+      # Use ErrorHandlingDeserializer so your DefaultErrorHandler can handle deserialization errors
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+
+      # Tell the ErrorHandlingDeserializer which underlying deserializers to delegate to
+      properties:
+        spring:
+          deserializer:
+            key:
+              delegate:
+                class: org.apache.kafka.common.serialization.StringDeserializer
+            value:
+              delegate:
+                class: org.springframework.kafka.support.serializer.JsonDeserializer
+
+        # Important: don't rely on producer type headers; always deserialize into local type
+        spring.json:
+          use.type.headers: false
+          value:
+            default:
+              type: com.eshop.inventory_service.event.OrderCreatedEvent
+          trusted:
+            packages: "com.eshop.*"
 
 eureka:
   client:
