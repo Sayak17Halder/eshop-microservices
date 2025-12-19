@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -73,11 +74,39 @@ public class OrderService {
                                         .build()
                         ).collect(Collectors.toList())
                 )
+                .status(OrderStatus.CREATED)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
         orderRepository.save(order);
+
+        //Kafka
         OrderCreatedEvent event = buildEventFromOrder(order);
-        kafkaTemplate.send("order-created", order.getOrderNumber(), event);
+        kafkaTemplate.send("order-created", event.getOrderNumber(), event)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        log.info(
+                                "✔ Successfully published OrderCreatedEvent. Topic={}, Partition={}, Offset={}, OrderNumber={}",
+                                result.getRecordMetadata().topic(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset(),
+                                event.getOrderNumber()
+                        );
+                    } else {
+                        log.error(
+                                "❌ Failed to publish OrderCreatedEvent for OrderNumber={}. Reason={}",
+                                event.getOrderNumber(),
+                                ex.getMessage(),
+                                ex
+                        );
+                    }
+                });
+
+        order.setStatus(OrderStatus.WAITING_FOR_INVENTORY);
+        order.setUpdatedAt(Instant.now());
+        orderRepository.save(order);
+
         return order.getOrderNumber();
     }
 

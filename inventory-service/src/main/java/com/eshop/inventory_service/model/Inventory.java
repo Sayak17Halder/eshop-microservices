@@ -18,4 +18,17 @@ public class Inventory {
     private String skuCode;
 
     private Integer quantity;
+
+    /**
+     * Domain behavior – safe stock decrease
+     */
+    public void decrease(int qty) {
+        if (qty <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        if (this.quantity < qty) {
+            throw new IllegalStateException("Insufficient stock for SKU " + skuCode);
+        }
+        this.quantity -= qty;
+    }
 }

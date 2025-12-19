@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Document("orders")
@@ -19,4 +20,8 @@ public class Order {
     private String orderNumber;
     private BigDecimal amount;
     private List<OrderLineItem> orderItems;
+    // saga
+    private OrderStatus status;
+    private Instant createdAt;
+    private Instant updatedAt;
 }
