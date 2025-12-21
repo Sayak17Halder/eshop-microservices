@@ -25,12 +25,13 @@ public class InventorySagaListener {
     @KafkaListener(
             topics = "order-reserved",
             groupId = "order-service-group",
+            containerFactory = "orderReservedKafkaListenerContainerFactory",
             concurrency = "3"
     )
     @Transactional
     public void handleStockReserved(OrderReservedEvent event) {
 
-        log.info("⬅ StockReservedEvent received for order {}", event.getOrderNumber());
+        log.info("⬅ OrderReservedEvent received for order {}", event.getOrderNumber());
 
         Order order = orderRepository.findByOrderNumber(event.getOrderNumber())
                 .orElseThrow(() -> new OrderNotFoundException(
@@ -55,12 +56,13 @@ public class InventorySagaListener {
     @KafkaListener(
             topics = "order-failed",
             groupId = "order-service-group",
+            containerFactory = "orderFailedKafkaListenerContainerFactory",
             concurrency = "3"
     )
     @Transactional
     public void handleStockFailed(OrderFailedEvent event) {
 
-        log.info("⬅ StockFailedEvent received for order {}", event.getOrderNumber());
+        log.info("⬅ OrderFailedEvent received for order {}", event.getOrderNumber());
 
         Order order = orderRepository.findByOrderNumber(event.getOrderNumber())
                 .orElseThrow(() -> new IllegalStateException(
