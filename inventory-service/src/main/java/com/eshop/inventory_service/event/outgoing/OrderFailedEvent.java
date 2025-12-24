@@ -1,4 +1,4 @@
-package com.eshop.order_service.event;
+package com.eshop.inventory_service.event.outgoing;
 
 import lombok.*;
 import java.time.Instant;

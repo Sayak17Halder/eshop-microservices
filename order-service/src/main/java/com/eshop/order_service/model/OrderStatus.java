@@ -4,5 +4,6 @@ public enum OrderStatus {
     CREATED,
     WAITING_FOR_INVENTORY,
     INVENTORY_RESERVED,
-    CANCELLED
+    CANCELLED,
+    CONFIRMED
 }
