@@ -1,8 +1,8 @@
 package com.eshop.inventory_service.kafka;
 
-import com.eshop.inventory_service.event.OrderCreatedEvent; // or your package
-import com.eshop.inventory_service.event.OrderFailedDomainEvent;
-import com.eshop.inventory_service.event.OrderReservedDomainEvent;
+import com.eshop.inventory_service.event.incoming.OrderCreatedEvent; // or your package
+import com.eshop.inventory_service.event.domain.OrderFailedDomainEvent;
+import com.eshop.inventory_service.event.domain.OrderReservedDomainEvent;
 import com.eshop.inventory_service.model.Inventory;
 import com.eshop.inventory_service.model.ProcessedOrder;
 import com.eshop.inventory_service.repository.InventoryRepository;
@@ -27,7 +27,10 @@ public class OrderCreatedListener {
     private final InventoryRepository inventoryRepository;
     private final InventoryEventProducer inventoryEventProducer;
 
-    @KafkaListener(topics = "order-created", groupId = "inventory-service-group")
+    @KafkaListener(
+            topics = "order-created",
+            groupId = "inventory-service-group",
+            containerFactory = "orderCreatedKafkaListenerContainerFactory")
     @Transactional
     public void handleOrderCreated(OrderCreatedEvent event) {
 
@@ -60,13 +63,7 @@ public class OrderCreatedListener {
                 log.error("❌ Insufficient stock | order={} sku={}",
                         event.getOrderNumber(), item.getSkuCode());
 
-                processedOrderRepository.save(
-                        ProcessedOrder.builder()
-                                .orderNumber(event.getOrderNumber())
-                                .status("FAILED")
-                                .processedAt(Instant.now())
-                                .build()
-                );
+                processedOrderRepository.save(fromOrderCreatedEvent(event, "FAILED"));
 
                 // Publish domain event (not Kafka!)
                 inventoryEventProducer.publishOrderFailedEvent(
@@ -87,18 +84,34 @@ public class OrderCreatedListener {
         }
 
         // 6️⃣ Mark as RESERVED
-        processedOrderRepository.save(
-                ProcessedOrder.builder()
-                        .orderNumber(event.getOrderNumber())
-                        .status("RESERVED")
-                        .processedAt(Instant.now())
-                        .build()
-        );
+
+        processedOrderRepository.save(fromOrderCreatedEvent(event, "RESERVED"));
 
         // Publish domain event
-        inventoryEventProducer.publishOrderReservedEvent(new OrderReservedDomainEvent(event.getOrderNumber()));
+        inventoryEventProducer.publishOrderReservedEvent(new OrderReservedDomainEvent(event.getOrderNumber(), event.getAmount()));
 
         log.info("✔ Inventory reserved | orderNumber={}", event.getOrderNumber());
 
+    }
+
+    // OrderCreatedEvent to ProcessedOrder
+    public static ProcessedOrder fromOrderCreatedEvent(OrderCreatedEvent event, String status) {
+
+        List<ProcessedOrder.OrderLineItemEvent> items =
+                event.getOrderItems()
+                        .stream()
+                        .map(e -> new ProcessedOrder.OrderLineItemEvent(
+                                e.getSkuCode(),
+                                e.getQuantity(),
+                                e.getPrice()
+                        ))
+                        .toList();
+
+        return ProcessedOrder.builder()
+                .orderNumber(event.getOrderNumber())
+                .status(status)
+                .processedAt(Instant.now())
+                .orderItems(items)
+                .build();
     }
 }

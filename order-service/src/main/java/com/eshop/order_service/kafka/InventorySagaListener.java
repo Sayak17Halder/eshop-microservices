@@ -1,7 +1,8 @@
 package com.eshop.order_service.kafka;
 
-import com.eshop.order_service.event.OrderFailedEvent;
-import com.eshop.order_service.event.OrderReservedEvent;
+import com.eshop.order_service.event.incoming.InventoryReleasedEvent;
+import com.eshop.order_service.event.incoming.OrderFailedEvent;
+import com.eshop.order_service.event.incoming.OrderReservedEvent;
 import com.eshop.order_service.exception.OrderNotFoundException;
 import com.eshop.order_service.model.Order;
 import com.eshop.order_service.model.OrderStatus;
@@ -82,5 +83,37 @@ public class InventorySagaListener {
 
         log.info("❌ Order {} cancelled due to inventory failure. Reason={}",
                 event.getOrderNumber(), event.getReason());
+    }
+
+    // ---------- INVENTORY RELEASED PATH ----------
+    @KafkaListener(
+            topics = "inventory-released",
+            groupId = "order-service-group",
+            containerFactory = "inventoryReleasedKafkaListenerContainerFactory",
+            concurrency = "3"
+    )
+    @Transactional
+    public void inventoryReleasedKafkaListenerContainerFactory(InventoryReleasedEvent event) {
+
+        log.info("⬅ InventoryReleasedEvent received for order {}", event.getOrderNumber());
+
+        Order order = orderRepository.findByOrderNumber(event.getOrderNumber())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Order not found for orderNumber=" + event.getOrderNumber()
+                ));
+
+        // Idempotency check
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            log.warn("⚠ Order {} already CANCELLED", event.getOrderNumber());
+            return;
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setUpdatedAt(Instant.now());
+
+        orderRepository.save(order);
+
+        log.info("❌ Order {} cancelled due to inventory failure.",
+                event.getOrderNumber());
     }
 }

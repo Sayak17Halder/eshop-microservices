@@ -2,7 +2,7 @@ package com.eshop.order_service.service;
 
 import com.eshop.order_service.dto.InventoryResponse;
 import com.eshop.order_service.dto.OrderRequest;
-import com.eshop.order_service.event.OrderCreatedEvent;
+import com.eshop.order_service.event.outgoing.OrderCreatedEvent;
 import com.eshop.order_service.exception.ProductOutOfStockException;
 import com.eshop.order_service.model.*;
 import com.eshop.order_service.repository.OrderRepository;

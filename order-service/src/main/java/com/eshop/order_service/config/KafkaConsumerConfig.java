@@ -1,7 +1,6 @@
 package com.eshop.order_service.config;
 
-import com.eshop.order_service.event.OrderFailedEvent;
-import com.eshop.order_service.event.OrderReservedEvent;
+import com.eshop.order_service.event.incoming.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -52,7 +51,7 @@ public class KafkaConsumerConfig {
         return handler;
     }
 
-    // ---------------- RESERVED EVENT ---------------- (@KafkaListener + containerFactory)
+    // ---------------- ORDER RESERVED EVENT ---------------- (@KafkaListener + containerFactory)
     @Bean
     public ConsumerFactory<String, OrderReservedEvent> orderReservedConsumerFactory(
             KafkaProperties properties
@@ -77,7 +76,7 @@ public class KafkaConsumerConfig {
         return factory;
     }
 
-    // ---------------- FAILED EVENT ---------------- (@KafkaListener + containerFactory)
+    // ---------------- ORDER FAILED EVENT ---------------- (@KafkaListener + containerFactory)
 
     @Bean
     public ConsumerFactory<String, OrderFailedEvent> orderFailedConsumerFactory(
@@ -98,6 +97,83 @@ public class KafkaConsumerConfig {
             ConsumerFactory<String, OrderFailedEvent> cf
     ) {
         ConcurrentKafkaListenerContainerFactory<String, OrderFailedEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(cf);
+        return factory;
+    }
+
+    // ---------------- PAYMENT COMPLETED EVENT ---------------- (@KafkaListener + containerFactory)
+    @Bean
+    public ConsumerFactory<String, PaymentCompletedEvent> paymentCompletedConsumerFactory(
+            KafkaProperties properties
+    ) {
+        Map<String, Object> props = new HashMap<>(properties.buildConsumerProperties());
+
+        return new DefaultKafkaConsumerFactory<>(
+                props,
+                new StringDeserializer(),
+                new JsonDeserializer<>(PaymentCompletedEvent.class, false)
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentCompletedEvent>
+    paymentCompletedKafkaListenerContainerFactory(
+            ConsumerFactory<String, PaymentCompletedEvent> cf
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentCompletedEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(cf);
+        return factory;
+    }
+
+    // ---------------- PAYMENT FAILED EVENT ---------------- (@KafkaListener + containerFactory)
+
+    @Bean
+    public ConsumerFactory<String, PaymentFailedEvent> paymentFailedConsumerFactory(
+            KafkaProperties properties
+    ) {
+        Map<String, Object> props = new HashMap<>(properties.buildConsumerProperties());
+
+        return new DefaultKafkaConsumerFactory<>(
+                props,
+                new StringDeserializer(),
+                new JsonDeserializer<>(PaymentFailedEvent.class, false)
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, PaymentFailedEvent>
+    paymentFailedKafkaListenerContainerFactory(
+            ConsumerFactory<String, PaymentFailedEvent> cf
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentFailedEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(cf);
+        return factory;
+    }
+
+    // ---------------- INVENTORY RELEASED EVENT ---------------- (@KafkaListener + containerFactory)
+
+    @Bean
+    public ConsumerFactory<String, InventoryReleasedEvent> inventoryReleasedConsumerFactory(
+            KafkaProperties properties
+    ) {
+        Map<String, Object> props = new HashMap<>(properties.buildConsumerProperties());
+
+        return new DefaultKafkaConsumerFactory<>(
+                props,
+                new StringDeserializer(),
+                new JsonDeserializer<>(InventoryReleasedEvent.class, false)
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, InventoryReleasedEvent>
+    inventoryReleasedKafkaListenerContainerFactory(
+            ConsumerFactory<String, InventoryReleasedEvent> cf
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, InventoryReleasedEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(cf);
         return factory;

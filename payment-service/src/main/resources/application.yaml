@@ -1,31 +1,32 @@
+server:
+  port: 8084
+
 spring:
   application:
-    name: order-service
+    name: payment-service
+  jackson:
+    time-zone: Asia/Kolkata
 
-  data:
-    mongodb:
-      host: localhost
-      port: 27017
-      database: orderdb
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eshopdb
+    username: postgres
+    password: eshop123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.jdbc.time_zone: UTC
 
   kafka:
     bootstrap-servers: localhost:29092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-      acks: all
-      retries: 5
-
-      properties:
-        enable.idempotence: true
-        max.in.flight.requests.per.connection: 5
-        linger.ms: 5
-        batch.size: 32768
-        spring.json.add.type.headers: false
+    listener:
+      ack-mode: record  # process record by record
 
     consumer:
-      group-id: order-service-group
+      group-id: payment-service-group
       auto-offset-reset: earliest
       enable-auto-commit: false
 
@@ -51,16 +52,27 @@ spring:
                 class: org.springframework.kafka.support.serializer.JsonDeserializer
 
         # Important: don't rely on producer type headers; always deserialize into local type
-#        spring.json:
-#          use.type.headers: false
-#          value:
-#            default:
-#              type: com.eshop.order_service.event.incoming.OrderReservedEvent
+        spring.json:
+          use.type.headers: false
+          value:
+            default:
+              type: com.eshop.payment_service.event.incoming.OrderReservedEvent
           trusted:
-            packages: com.eshop.order_service.event
+            packages: "com.eshop.*"
 
-server:
-  port: 8083
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      acks: all
+      retries: 5
+
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 5
+        batch.size: 32768
+#        spring.json.add.type.headers: false
 
 eureka:
   client:
@@ -72,9 +84,3 @@ eureka:
     hostname: localhost
     prefer-ip-address: true
     ip-address: 127.0.0.1
-
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: "*"

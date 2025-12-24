@@ -51,11 +51,11 @@ spring:
                 class: org.springframework.kafka.support.serializer.JsonDeserializer
 
         # Important: don't rely on producer type headers; always deserialize into local type
-        spring.json:
-          use.type.headers: false
-          value:
-            default:
-              type: com.eshop.inventory_service.event.OrderCreatedEvent
+#        spring.json:
+#          use.type.headers: false
+#          value:
+#            default:
+#              type: com.eshop.inventory_service.event.incoming.OrderCreatedEvent
           trusted:
             packages: "com.eshop.*"
 

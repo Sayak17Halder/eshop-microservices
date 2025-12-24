@@ -1,4 +1,4 @@
-package com.eshop.inventory_service.event;
+package com.eshop.order_service.event.outgoing;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

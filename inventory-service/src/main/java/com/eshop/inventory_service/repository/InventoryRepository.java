@@ -20,6 +20,18 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     @Query("update Inventory i set i.quantity = i.quantity - :qty where i.skuCode = :sku and i.quantity >= :qty")
     int decrementQuantityIfAvailable(@Param("sku") String sku, @Param("qty") int qty);
 
+    @Transactional
+    @Modifying
+    @Query("""
+        update Inventory i
+        set i.quantity = i.quantity + :qty
+        where i.skuCode = :sku
+    """)
+    int incrementQuantity(
+            @Param("sku") String sku,
+            @Param("qty") int qty
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.skuCode IN :skuCodes ORDER BY i.skuCode")
     List<Inventory> findBySkuCodeInForUpdate(List<String> skuCodes);
